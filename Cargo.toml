@@ -25,6 +25,7 @@ uuid = { version = "1.2", features = ["v4"] } # used by auth and health-check se
 pbkdf2 = { version = "0.12", features = ["simple"] } # used by auth service
 rand_core = { version = "0.6", features = ["std"] } # used by auth service
 clap = { version = "4.2", features = ["derive"] } # used by client
+thiserror = "1.0.50"
 
 [build-dependencies]
 homedir = "0.2.1"
