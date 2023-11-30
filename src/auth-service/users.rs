@@ -4,22 +4,8 @@ use pbkdf2::{
 };
 use rand_core::OsRng;
 use uuid::Uuid;
-// use thiserror::Error;
 
-use std::{collections::HashMap};
-// use std::fmt;
-
-
-// impl fmt::Display for UserError {
-//     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-//         write!(f, "{:?}", self)
-//     }
-// }
-
-// #[derive(Error, Debug)]
-// pub enum UserError {
-//     UsernameAlreadyExist,
-// }
+use std::collections::HashMap;
 
 pub trait Users {
     fn create_user(&mut self, username: String, password: String) -> Result<(), String>;
@@ -66,22 +52,31 @@ impl Users for UsersImpl {
     }
 
     fn get_user_uuid(&self, username: String, password: String) -> Option<String> {
-        let user: &User = todo!(); // Retrieve `User` or return `None` is user can't be found.
+        let user: &User = match self.username_to_user.get(&username) {
+            Some(user) => user,
+            None => return None,
+        };
 
-        // Get user's password as `PasswordHash` instance. 
         let hashed_password = user.password.clone();
         let parsed_hash = PasswordHash::new(&hashed_password).ok()?;
 
-        // Verify passed in password matches user's password.
         let result = Pbkdf2.verify_password(password.as_bytes(), &parsed_hash);
 
-        // TODO: If the username and password passed in matches the user's username and password return the user's uuid.
-
-        None
+        match result {
+            Ok(_) => Some(user.user_uuid.clone()),
+            Err(_) => None
+        }
     }
 
     fn delete_user(&mut self, user_uuid: String) {
-        // TODO: Remove user from `username_to_user` and `uuid_to_user`.
+        let user = self.uuid_to_user.remove(&user_uuid);
+
+        match user {
+            Some(user) => {
+                self.username_to_user.remove(&user.username);
+            },
+            None => ()            
+        }
     }
 }
 

@@ -45,15 +45,30 @@ impl Auth for AuthService {
 
         let req = request.into_inner();
 
-        let result: Option<String> = todo!(); // Get user's uuid from `users_service`. Panic if the lock is poisoned.
+        let result: Option<String> = self.users_service.lock()
+                                        .expect("Error while lock users_service")
+                                        .get_user_uuid(req.username, req.password);
+        
+        if result.is_none() {
+            let reply: SignInResponse = SignInResponse {
+                status_code: StatusCode::Failure.into(),
+                user_uuid: "".to_owned(),
+                session_token: "".to_owned(),
+            };
+            return Ok(Response::new(reply));
+        }
 
-        // Match on `result`. If `result` is `None` return a SignInResponse with a the `status_code` set to `Failure`
-        // and `user_uuid`/`session_token` set to empty strings.
-        let user_uuid: String = todo!();
+        let user_uuid: String = result.unwrap();
 
-        let session_token: String = todo!(); // Create new session using `sessions_service`. Panic if the lock is poisoned.
+        let session_token: String = self.sessions_service.lock()
+                                    .expect("Error while lock sessions_service")
+                                    .create_session(&user_uuid);
 
-        let reply: SignInResponse = todo!(); // Create a `SignInResponse` with `status_code` set to `Success`
+        let reply: SignInResponse = SignInResponse { 
+            status_code: StatusCode::Success.into(), 
+            user_uuid: user_uuid, 
+            session_token: session_token 
+        }; // Create a `SignInResponse` with `status_code` set to `Success`
 
         Ok(Response::new(reply))
     }
@@ -66,15 +81,23 @@ impl Auth for AuthService {
 
         let req = request.into_inner();
 
-        let result: Result<(), String> = todo!(); // Create a new user through `users_service`. Panic if the lock is poisoned.
+        let result: Result<(), String> = self.users_service.lock()
+                                            .expect("Error while lock users_service on create")
+                                            .create_user(req.username, req.password); 
 
         // TODO: Return a `SignUpResponse` with the appropriate `status_code` based on `result`.
         match result {
             Ok(_) => {
-                todo!()
+                let reply: SignUpResponse = SignUpResponse {
+                    status_code: StatusCode::Success.into(),
+                };
+                Ok(Response::new(reply))
             }
             Err(_) => {
-                todo!()
+                let reply: SignUpResponse = SignUpResponse {
+                    status_code: StatusCode::Failure.into(),
+                };
+                Ok(Response::new(reply))
             }
         }
     }
@@ -87,10 +110,12 @@ impl Auth for AuthService {
 
         let req = request.into_inner();
 
-        // TODO: Delete session using `sessions_service`.
+        self.sessions_service.lock()
+            .expect("Error while lock sessions_service on delete")
+            .delete_session(&req.session_token);
 
-        let reply: SignOutResponse = todo!(); // Create `SignOutResponse` with `status_code` set to `Success`
-
+        let reply: SignOutResponse = SignOutResponse { status_code: StatusCode::Success.into() };
+        
         Ok(Response::new(reply))
     }
 }
