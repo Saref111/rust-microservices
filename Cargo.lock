@@ -749,7 +749,6 @@ dependencies = [
  "pbkdf2",
  "prost",
  "rand_core",
- "thiserror",
  "tokio",
  "tonic",
  "tonic-build",
