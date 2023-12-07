@@ -1,7 +1,9 @@
 use std::env;
 use homedir;
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+type AbstractError = Box<dyn std::error::Error>;
+
+fn main() -> Result<(), AbstractError> {
     if cfg!(windows) && env::var("PROTOC").is_err() {
         let u_name = env::var("USERNAME").unwrap();
         let home = homedir::get_home(u_name).unwrap().ok_or("Cannot find homedir").unwrap();
