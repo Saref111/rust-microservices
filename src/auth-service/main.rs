@@ -1,4 +1,4 @@
-use std::sync::Mutex;
+use std::{sync::Mutex, net::SocketAddr};
 
 mod auth;
 mod sessions;
@@ -13,8 +13,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Here we are using ip 0.0.0.0 so the service is listening on all the configured network interfaces. This is needed for Docker to work, which we will add later on.
     // See: https://stackoverflow.com/questions/39525820/docker-port-forwarding-not-working
     // Port 50051 is the recommended gRPC port.
-    let addr = "[::0]:50051".parse()?;
-
+    let addr: SocketAddr = "[::0]:50051".parse()?;
+    
     let users_service: Box<Mutex<dyn Users + Send + Sync + 'static>> = Box::new(Mutex::new(UsersImpl::default())); 
     let sessions_service: Box<Mutex<dyn Sessions + Send + Sync + 'static>> = Box::new(Mutex::new(SessionsImpl::default())); 
     
